@@ -1,0 +1,24 @@
+{
+    "name": "cecula/proprietor",
+    "description": "An Two-Factor Authentication Library for verifying ownership of mobile number via sms and call method\"",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Cecula\\Proprietor\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Godwin Noah",
+            "email": "ng@noahgodwin.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^9.3.3"
+    },
+    "require": {
+        "cecula/sync-api-client": "^1.0",
+        "ramsey/uuid": "^4.2"
+    }
+}
