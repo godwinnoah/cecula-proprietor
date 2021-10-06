@@ -23,8 +23,13 @@ class Responses
         [
             'code'     => 'CE204',
             'message'  => 'You have submitted an invalid tracking ID'
+        ],
+        [
+            'code'     => 'CE205',
+            'message'  => 'Tracking ID does not reference any authentication request'
         ]
     ];
+    
     public static function getResponse(string $code)
     {
         return self::$responses[$code];

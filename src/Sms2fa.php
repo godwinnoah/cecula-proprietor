@@ -11,16 +11,16 @@ use Cecula\Proprietor\Responses;
 
 class Sms2fa extends Proprietor
 {
-    private $settings;
 
-    public function __construct()
+    /**
+     * Initialize 2FA
+     * This method is used for initializing sms two factor authentication.
+     *
+     * @param string $mobile
+     * @return array
+     */
+    public function init(string $mobile): array
     {
-        $this->settings = $this->credentials;
-    }
-
-    public function init(string $mobile, string $templateName = 'default'): array
-    {
-        // TODO: Validate Number
         // Check that user has sufficient balance to send the message
         $syncAccount = new SyncAccount();
         if (!$syncAccount->balanceIsInsufficient()) return Responses::getResponse("CE1804");
@@ -31,20 +31,21 @@ class Sms2fa extends Proprietor
         // Apply SMS OTP to specified template
         $message = $this->generateMessage($otp);
 
-
         // Initialize SMS Sending Request to valid number
         $syncSms = new SyncSms();
         $responseObj = $syncSms->sendSMS($message, [$mobile]);
 
         if ($responseObj->status == "1801") {
+            $uuid = Uuid::uuid4(); // Generate a reference for the request
 
-            // TODO: If message was sent successfully, save the trackingId and OTP Code to storage of of choice
+            // If message was sent successfully, save the trackingId and OTP Code to storage of of choice
+            $this->saveOTP($mobile, $otp, $uuid, $responseObj->report[0]->trackingId);
 
-            // TODO: Return a trackingId (persisted to storage), a success code, and success message
+            // Show success message
             return [
-                'code'      => 'CE200',
+                'code'      => '200',
                 'message'   => sprintf('OTP Code has been sent to %s. Persist the reference to database.', $mobile),
-                'reference' => Uuid::uuid4()
+                'reference' => $uuid
             ];
         } else {
             return $responseObj;
@@ -114,6 +115,14 @@ class Sms2fa extends Proprietor
     }
 
 
+    /**
+     * Complete OTP
+     * This endpoint is used for completing SMS OTP Verification via hosted sim
+     *
+     * @param string $trackingId
+     * @param string $oneTimePin
+     * @return array
+     */
     public function complete(string $trackingId, string $oneTimePin): array
     {
         // Validate the tracking ID
@@ -123,31 +132,28 @@ class Sms2fa extends Proprietor
         if(!$this->isValidOTP($oneTimePin)) return Responses::getResponse("CE203");
 
         // Fetch data for request with the submitted trackingId
-        $trackingInfo = [];
+        // Query for record of the submitted private Key
+        $trackingInfo = $this->getOtpRequestData($trackingId);
 
-        // TODO: If record is not found for the submitted trackingId, return error message
-        if (empty($trackingInfo)) {
-            return [
-                'code'     => '',
-                'message'  => 'You have submitted an invalid tracking ID'
-            ];
-        }
+        // If record is not found for the submitted Key, return error message
+        if (empty($trackingInfo)) return Responses::getResponse("CE205");
 
         // Check if verification has been completed previously
-        if ($trackingInfo['completed'] === 1) return Responses::getResponse("CE201");
+        if ($trackingInfo->completed === 1) return Responses::getResponse("CE201");
 
         // Check if OTP Code has expired
-        if (time() > (int) $trackingInfo['created'] + $this->settings->otp->validityPeriod) return Responses::getResponse("CE202");
+        if (time() > (int) $trackingInfo->created + $this->settings->otp->validityPeriod) return Responses::getResponse("CE202");
 
         // Check that submitted OTP matches the fetched OTP
         if ($trackingInfo['otp'] != $oneTimePin) return Responses::getResponse("CE203");
 
-        // TODO: Flag the OTP as verified
+        // Flag the OTP as verified
+        $this->flagOtpVerificationCompleted($trackingId);
 
-        // TODO: Output success message
+        // Output success message
         return [
-            'code'     => '',
-            'message'  => ''
+            'code'      => '200',
+            'message'   => sprintf('Mobile number %s has been successfully verified', $trackingInfo->mobile)
         ];
     }
 

@@ -1,3 +1,7 @@
 /vendor
 /composer.lock
 /.ceculasync.json
+
+
+/test.db
+/test.php
