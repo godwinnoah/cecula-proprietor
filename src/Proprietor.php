@@ -198,12 +198,25 @@ class Proprietor extends SyncApiClient
      * @param string $mobile
      * @param string $privateKey
      * @param int $syncReference
-     * @return void
+     * @return bool
      */
-    protected function saveOTP(string $mobile, string $otp, string $privateKey, int $syncReference): void
+    protected function saveOTP(string $mobile, string $otp, string $privateKey, int $syncReference): bool
     {
-        $stm = $this->pdo->prepare(sprintf("INSERT INTO %s (uuid, mobile, otp, syncref, created, modified) VALUE (?, ?, ?, ?, ?, ?)", $this->smsOtpTable));
-        $stm->execute([$privateKey, $mobile, $otp, $syncReference, time(), time()]);
+        $stm = $this->pdo->prepare(
+            sprintf("INSERT INTO %s (uuid, mobile, otp, syncref, created, modified) VALUES (:uuid, :mobile, :otp, :syncref, :created, :modified)", $this->smsOtpTable)
+        );
+        try {
+            return $stm->execute([
+                ":uuid" => $privateKey,
+                ":mobile" => $mobile,
+                ":otp" => $otp,
+                ":syncref" => $syncReference, 
+                ":created" => date("Y-m-d H:i:s"),
+                ":modified" => date("Y-m-d H:i:s")
+            ]);
+        } catch (\Throwable $th) {
+            echo sprintf("Error %s: %s", $th->getCode(), $th->getMessage());
+        }
     }
 
 
@@ -213,9 +226,9 @@ class Proprietor extends SyncApiClient
      * This method fetches the DATA for a submitted OTP Code
      *
      * @param string $uuid
-     * @return void
+     * @return mixed
      */
-    protected function getOtpRequestData(string $uuid): object | array
+    protected function getOtpRequestData(string $uuid): object | array | bool
     {
         $stmt = $this->pdo->prepare(sprintf("SELECT mobile, otp, syncref, completed, created FROM %s WHERE uuid=?", $this->smsOtpTable));
         $stmt->execute([$uuid]);
@@ -227,7 +240,7 @@ class Proprietor extends SyncApiClient
      * Flag SMS OTP Verification Completed
      *
      * @param string $uuid
-     * @return void
+     * @return bool
      */
     protected function flagOtpVerificationCompleted(string $uuid): bool
     {
@@ -242,7 +255,7 @@ class Proprietor extends SyncApiClient
      * This method is used to validate tracking ID
      *
      * @param string $trackingId
-     * @return boolean
+     * @return bool
      */
     protected function validateTrackingId(string $trackingId): bool
     {
@@ -251,4 +264,9 @@ class Proprietor extends SyncApiClient
         return count($matches) > 0;
     }
 
+
+    protected function jsonify(mixed $array): object
+    {
+        return json_decode(json_encode($array));
+    }
 }

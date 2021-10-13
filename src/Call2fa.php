@@ -54,12 +54,12 @@ class Call2fa extends Proprietor
         // Fetch the provider's mobile number from service. [Internet connection is required]
         $providerMobile = $this->syncAccount->getSimMSISDN();
 
-        return json_decode(json_encode([
+        return $this->jsonify([
             'code'    => 200,
             'msisdn'  => $providerMobile->msisdn,
             'message' => sprintf("%s is awaiting call from %s", $providerMobile->msisdn, $mobile ),
             'reference' => (string) $uuid
-        ]));
+        ]);
     }
 
 
@@ -88,10 +88,10 @@ class Call2fa extends Proprietor
             // Confirm that call originated from this clientNumber
             $this->setCallVerificationStatusReceived($callerMobile);
 
-            return json_decode(json_encode([
+            return $this->jsonify([
                 'code' => 200,
                 'message' => 'Success'
-            ]));
+            ]);
         }
     }
 
@@ -130,7 +130,7 @@ class Call2fa extends Proprietor
                     'message'   => sprintf("Awaiting call from %s", $mobileInfo->mobile)
                 ];
             }
-            return json_decode(json_encode($response));
+            return $this->jsonify($response);
         }
     }
 

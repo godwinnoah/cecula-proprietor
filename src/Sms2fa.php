@@ -8,6 +8,7 @@ use Cecula\Proprietor\Proprietor;
 
 use Ramsey\Uuid\Uuid;
 use Cecula\Proprietor\Responses;
+use DateTime;
 
 class Sms2fa extends Proprietor
 {
@@ -17,13 +18,13 @@ class Sms2fa extends Proprietor
      * This method is used for initializing sms two factor authentication.
      *
      * @param string $mobile
-     * @return array
+     * @return object
      */
-    public function init(string $mobile): array
+    public function init(string $mobile): object
     {
         // Check that user has sufficient balance to send the message
         $syncAccount = new SyncAccount();
-        if (!$syncAccount->balanceIsInsufficient()) return Responses::getResponse("CE1804");
+        if ($syncAccount->balanceIsInsufficient()) return Responses::getResponse("CE1804");
 
         // Generate SMS OTP According to user's configuration
         $otp = $this->generateOtp();
@@ -42,15 +43,17 @@ class Sms2fa extends Proprietor
             $this->saveOTP($mobile, $otp, $uuid, $responseObj->report[0]->trackingId);
 
             // Show success message
-            return [
+            return $this->jsonify([
                 'code'      => '200',
                 'message'   => sprintf('OTP Code has been sent to %s. Persist the reference to database.', $mobile),
-                'reference' => $uuid
-            ];
+                'reference' => (string) $uuid
+            ]);
         } else {
             return $responseObj;
         }
     }
+
+
 
     /**
      * Generate Message
@@ -121,9 +124,9 @@ class Sms2fa extends Proprietor
      *
      * @param string $trackingId
      * @param string $oneTimePin
-     * @return array
+     * @return object
      */
-    public function complete(string $trackingId, string $oneTimePin): array
+    public function complete(string $trackingId, string $oneTimePin): object
     {
         // Validate the tracking ID
         if (!$this->validateTrackingId($trackingId)) return Responses::getResponse("CE204");
@@ -136,25 +139,33 @@ class Sms2fa extends Proprietor
         $trackingInfo = $this->getOtpRequestData($trackingId);
 
         // If record is not found for the submitted Key, return error message
-        if (empty($trackingInfo)) return Responses::getResponse("CE205");
+        if (!$trackingInfo) return Responses::getResponse("CE205");
 
         // Check if verification has been completed previously
         if ($trackingInfo->completed === 1) return Responses::getResponse("CE201");
 
         // Check if OTP Code has expired
-        if (time() > (int) $trackingInfo->created + $this->settings->otp->validityPeriod) return Responses::getResponse("CE202");
+        if (time() > (int) (new DateTime($trackingInfo->created))->getTimestamp() + $this->settings->otp->validityPeriod) return Responses::getResponse("CE202");
 
         // Check that submitted OTP matches the fetched OTP
-        if ($trackingInfo['otp'] != $oneTimePin) return Responses::getResponse("CE203");
+        if ($trackingInfo->otp != $oneTimePin) return Responses::getResponse("CE203");
+
+        // Check if OTP Code has been previously verified
+        if ($trackingInfo->completed == 1) {
+            return $this->jsonify([
+                'code'      => '201',
+                'message'   => sprintf('Mobile number %s has already been verified', $trackingInfo->mobile)
+            ]);
+        }
 
         // Flag the OTP as verified
         $this->flagOtpVerificationCompleted($trackingId);
 
         // Output success message
-        return [
+        return $this->jsonify([
             'code'      => '200',
             'message'   => sprintf('Mobile number %s has been successfully verified', $trackingInfo->mobile)
-        ];
+        ]);
     }
 
 
@@ -167,7 +178,7 @@ class Sms2fa extends Proprietor
      */
     private function isValidOTP(string $otp)
     {
-        switch ($$this->settings->otp->characters) {
+        switch ($this->settings->otp->characters) {
             case "alnum":
                 case "alphanumeric":
                     return ctype_alnum($otp);

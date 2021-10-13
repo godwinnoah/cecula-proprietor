@@ -16,7 +16,6 @@ try{
     echo json_encode(
         [
             'status' => 'done',
-            'callerMobile' => $jsonObject->originator,
             'responseCode' => $hookStatus->code
         ]
     );

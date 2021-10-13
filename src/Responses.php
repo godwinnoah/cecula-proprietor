@@ -40,6 +40,6 @@ class Responses
     
     public static function getResponse(string $code)
     {
-        return self::$responses[$code];
+        return json_decode(json_encode(self::$responses[$code]));
     }
 }
