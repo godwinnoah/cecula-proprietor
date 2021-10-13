@@ -1,6 +1,6 @@
 {
     "name": "cecula/proprietor",
-    "description": "A Two-Factor Authentication Library for verifying ownership of mobile number via sms and call method\"",
+    "description": "A Two-Factor Authentication Library for verifying ownership of mobile number via sms and call method.",
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -20,7 +20,7 @@
         "phpunit/phpunit": "^9.3.3"
     },
     "require": {
-        "cecula/sync-api-client": "^1.0",
+        "cecula/sync-api-client": "^1.0.3",
         "ramsey/uuid": "^4.2",
         "rmccue/requests": "^1.8"
     }

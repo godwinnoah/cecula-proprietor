@@ -1,1 +1,1 @@
-# cecula-proprietor
+# Cecula Proprietor
