@@ -1,6 +1,6 @@
 <?php
 
-namespace Cecula\Proprietor\Sms2fa;
+namespace Cecula\Proprietor;
 
 use CeculaSyncApiClient\SyncSms;
 use CeculaSyncApiClient\SyncAccount;
@@ -155,21 +155,6 @@ class Sms2fa extends Proprietor
             'code'      => '200',
             'message'   => sprintf('Mobile number %s has been successfully verified', $trackingInfo->mobile)
         ];
-    }
-
-
-    /**
-     * Validate Tracking ID
-     * This method is used to validate tracking ID
-     *
-     * @param string $trackingId
-     * @return boolean
-     */
-    private function validateTrackingId(string $trackingId): bool
-    {
-        $pattern = "/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/";
-        preg_match($pattern, $trackingId, $matches);
-        return count($matches) > 0;
     }
 
 

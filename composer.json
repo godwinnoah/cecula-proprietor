@@ -11,7 +11,9 @@
     "authors": [
         {
             "name": "Godwin Noah",
-            "email": "ng@noahgodwin.com"
+            "email": "ng@noahgodwin.com",
+            "homepage": "https://godwinnoah.com",
+            "role": "Developer"
         }
     ],
     "require-dev": {
@@ -19,6 +21,7 @@
     },
     "require": {
         "cecula/sync-api-client": "^1.0",
-        "ramsey/uuid": "^4.2"
+        "ramsey/uuid": "^4.2",
+        "rmccue/requests": "^1.8"
     }
 }
