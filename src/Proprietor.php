@@ -34,14 +34,9 @@ class Proprietor extends SyncApiClient
 
         $this->callVerificationTable = isset($this->settings->database->callVerificationTableName) ? $this->settings->database->callVerificationTableName : "call_waitlists";
 
-        $this->pdo = new PDO(sprintf("sqlite:%s/verifications.db", __DIR__));
+        $this->pdo = new PDO(sprintf("sqlite:%s/../storage/verifications.db", __DIR__));
 
         $this->totalUnprocessedRecords = $this->countRecords();
-
-        // Create webhook file if it does not exist
-        if (!file_exists("synchook.php")) {
-            
-        }
     }
 
 

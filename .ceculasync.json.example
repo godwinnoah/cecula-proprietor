@@ -1,0 +1,14 @@
+{
+  "apiKey": "",
+  "otp": {
+    "validityPeriod": 800,
+    "characters": "digits",
+    "length": 6,
+    "messageTemplate": "Your OTP is {code}"
+  },
+  "database": {
+    "type": "sqlite",
+    "smsOtpTableName": "cp_otp_requests",
+    "callVerificationTableName": "cp_call_waitlists"
+  }
+}
